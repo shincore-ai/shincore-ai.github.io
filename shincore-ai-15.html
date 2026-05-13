@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShinCore AI — Turn Missed Calls Into Money</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #ffffff;
+    --surface: #f4f6f9;
+    --card: #ffffff;
+    --border: #e2e6ed;
+    --accent: #0066ff;
+    --accent2: #00c8ff;
+    --red: #e53e3e;
+    --text: #0f1117;
+    --muted: #6b7280;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: var(--font-head);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR — crosshair style */
+  .cursor {
+    width: 20px; height: 20px;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+  }
+  .cursor::before,
+  .cursor::after {
+    content: '';
+    position: absolute;
+    background: var(--accent);
+  }
+  .cursor::before {
+    width: 2px; height: 20px;
+    left: 9px; top: 0;
+  }
+  .cursor::after {
+    width: 20px; height: 2px;
+    top: 9px; left: 0;
+  }
+  .cursor-ring {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.08s ease;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9000;
+    opacity: 0.3;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px);
+    background: rgba(5,5,8,0.8);
+  }
+
+  .logo {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+  }
+  .logo span { color: var(--accent); }
+
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 32px; align-items: center; }
+
+  .nav-cta {
+    background: var(--accent) !important;
+    color: var(--black) !important;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: opacity 0.2s !important;
+  }
+  .nav-cta:hover { opacity: 0.85 !important; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 140px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,160,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,245,160,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-content { position: relative; max-width: 900px; }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    border: 1px solid rgba(0,245,160,0.2);
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(0,245,160,0.05);
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  h1 {
+    font-size: clamp(48px, 7vw, 88px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -3px;
+    margin-bottom: 28px;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+    position: relative;
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+    font-family: var(--font-mono);
+    font-weight: 300;
+  }
+
+  .hero-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--black);
+    padding: 16px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary:hover {
+    background: #00dda0;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 40px rgba(0,245,160,0.3);
+  }
+
+  .btn-ghost {
+    color: var(--text);
+    padding: 16px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px;
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    flex-wrap: wrap;
+  }
+
+  .stat { text-align: center; }
+  .stat-num {
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* PROBLEM SECTION */
+  .section { padding: 100px 48px; max-width: 1200px; margin: 0 auto; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  h2 {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 60px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .problem-col {
+    padding: 48px;
+    background: var(--card);
+  }
+
+  .problem-col.before { border-right: 1px solid var(--border); }
+
+  .col-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .col-label.bad { color: var(--red); }
+  .col-label.good { color: var(--accent); }
+
+  .problem-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .problem-icon {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .problem-icon.bad { background: rgba(255,77,77,0.15); color: var(--red); }
+  .problem-icon.good { background: rgba(0,245,160,0.15); color: var(--accent); }
+
+  /* HOW IT WORKS */
+  .how-wrap { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 60px;
+  }
+
+  .step {
+    padding: 40px 32px;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .step:last-child { border-right: none; }
+
+  .step-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+  }
+
+  .step-icon {
+    width: 48px; height: 48px;
+    background: rgba(0,245,160,0.1);
+    border: 1px solid rgba(0,245,160,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .step h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+
+  .step p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-family: var(--font-mono);
+    font-weight: 300;
+  }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 60px;
+  }
+
+  .plan {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    position: relative;
+    transition: border-color 0.3s;
+  }
+  .plan:hover { border-color: rgba(0,245,160,0.3); }
+
+  .plan.featured {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(0,245,160,0.05) 0%, var(--card) 100%);
+  }
+
+  .plan-badge {
+    position: absolute;
+    top: -12px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--black);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+  }
+
+  .plan-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .plan-price {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .plan-price span { font-size: 20px; font-weight: 400; color: var(--muted); }
+
+  .plan-desc {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .plan-features { list-style: none; margin-bottom: 36px; }
+  .plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text);
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-family: var(--font-mono);
+    font-weight: 300;
+  }
+  .plan-features li::before {
+    content: '✓';
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .plan-btn {
+    display: block;
+    text-align: center;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .plan-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .plan.featured .plan-btn {
+    background: var(--accent);
+    color: var(--black);
+    border-color: var(--accent);
+  }
+  .plan.featured .plan-btn:hover {
+    background: #00dda0;
+    box-shadow: 0 8px 30px rgba(0,245,160,0.3);
+  }
+
+  /* CTA */
+  .cta-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 100px 48px;
+  }
+
+  .cta-box {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .cta-section h2 { letter-spacing: -2px; margin-bottom: 16px; }
+  .cta-section p {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ANIMATIONS */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* TICKER */
+  .ticker-wrap {
+    overflow: hidden;
+    background: rgba(0,245,160,0.05);
+    border-top: 1px solid rgba(0,245,160,0.1);
+    border-bottom: 1px solid rgba(0,245,160,0.1);
+    padding: 12px 0;
+  }
+  .ticker {
+    display: flex;
+    gap: 60px;
+    animation: ticker 25s linear infinite;
+    width: max-content;
+  }
+  .ticker-item {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    opacity: 0.7;
+  }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* WHY CHOOSE US */
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 60px;
+  }
+  .why-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .why-number {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: -1px;
+    font-family: var(--font-head);
+  }
+  .why-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 8px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .why-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* INDUSTRIES */
+  .industries-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 60px;
+  }
+  .industry-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .industry-card:hover {
+    border-color: rgba(0,245,160,0.4);
+    transform: translateY(-2px);
+  }
+  .industry-icon { font-size: 28px; }
+  .industry-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .industry-name { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+
+  /* LEAD FORM */
+  .lead-form {
+    margin-top: 48px;
+    text-align: left;
+  }
+  .form-group { margin-bottom: 20px; }
+  .form-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .form-input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-family: var(--font-mono);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,245,160,0.1);
+  }
+  .form-input::placeholder { color: var(--muted); opacity: 0.6; }
+  .btn-submit {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-head);
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+  .btn-submit:hover {
+    background: #00dda0;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 40px rgba(0,245,160,0.3);
+  }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .form-success, .form-error { display: none; margin-top: 20px; padding: 16px; border-radius: 8px; font-family: var(--font-mono); font-size: 14px; text-align: center; }
+  .form-success { background: rgba(0,245,160,0.1); border: 1px solid rgba(0,245,160,0.3); color: var(--accent); }
+  .form-error { background: rgba(229,62,62,0.1); border: 1px solid rgba(229,62,62,0.3); color: var(--red); }
+
+  @keyframes allaGlow {
+    from { text-shadow: 0 0 2px rgba(0,245,160,1), 0 0 8px rgba(0,245,160,0.1); }
+    to { text-shadow: 0 0 4px rgba(0,245,160,1), 0 0 12px rgba(0,245,160,0.15); }
+  }
+
+  @keyframes glow {
+    from { text-shadow: 0 0 10px rgba(0,245,160,0.8), 0 0 20px rgba(0,245,160,0.4), 0 0 40px rgba(0,245,160,0.2); }
+    to { text-shadow: 0 0 20px rgba(0,245,160,1), 0 0 40px rgba(0,245,160,0.6), 0 0 80px rgba(0,245,160,0.3); }
+  }
+
+  @media (max-width: 768px) {
+    .industries-grid { grid-template-columns: 1fr 1fr; }
+    .why-grid { grid-template-columns: 1fr 1fr; }
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .hero { padding: 120px 20px 60px; text-align: left; }
+    .hero-content { padding-left: 0; }
+    h1 { letter-spacing: -1px; font-size: clamp(36px, 10vw, 60px); }
+    .hero-sub { max-width: 100%; }
+    .hero-actions { flex-direction: column; align-items: flex-start; }
+    .stats-bar { gap: 40px; padding: 32px 24px; }
+    .section { padding: 60px 24px; }
+    .problem-grid { grid-template-columns: 1fr; }
+    .problem-col.before { border-right: none; border-bottom: 1px solid var(--border); }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .step { border-right: none; border-bottom: 1px solid var(--border); }
+    .pricing-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 8px 40px rgba(0,102,255,0.45), 0 0 0 0 rgba(0,102,255,0.3); }
+    50% { box-shadow: 0 8px 50px rgba(0,102,255,0.7), 0 0 0 8px rgba(0,102,255,0.08); }
+  }
+  @keyframes pulse-red {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  @keyframes shine-move {
+    0% { left: -100%; }
+    100% { left: 160%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Shin<span>Core</span> AI</div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#industries">Industries</a>
+    <a href="#demo">Demo</a>
+    <a href="#contact" class="nav-cta">Stop Missing Leads →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-tag">AI Call System · Live 24/7</div>
+    <h1>You're losing customers<br>from <em>missed calls.</em><br>We fix that.</h1>
+    <p class="hero-sub">ShinCore AI turns every missed call into a captured lead — automatically. No tired receptionist. No lost deals. Just revenue.</p>
+    <div class="hero-actions">
+      <a href="#demo" class="btn-primary">See Live Demo →</a>
+      <a href="#contact" class="btn-ghost">Stop Missing Leads →</a>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span class="ticker-item">24/7 Call Handling</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">Zero Missed Leads</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">Instant Response</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">Lead Qualification</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">Auto Booking</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">CRM Integration</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">24/7 Call Handling</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">Zero Missed Leads</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">Instant Response</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">Lead Qualification</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">Auto Booking</span>
+    <span class="ticker-item">·</span>
+    <span class="ticker-item">CRM Integration</span>
+    <span class="ticker-item">·</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">62%</div>
+    <div class="stat-label">of callers never call back</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">24/7</div>
+    <div class="stat-label">call coverage</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">&lt;3s</div>
+    <div class="stat-label">avg response time</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">0</div>
+    <div class="stat-label">missed leads</div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<div style="background: var(--black);">
+<div class="section fade-in">
+  <div class="section-label">The Problem</div>
+  <h2>Every missed call is<br>money walking out the door.</h2>
+
+  <div class="problem-grid">
+    <div class="problem-col before">
+      <div class="col-label bad">❌ Before ShinCore</div>
+      <div class="problem-item">
+        <div class="problem-icon bad">✕</div>
+        <span>Calls go unanswered after hours — customer goes to competitor</span>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon bad">✕</div>
+        <span>Tired receptionist misses details, makes errors</span>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon bad">✕</div>
+        <span>No record of who called or what they wanted</span>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon bad">✕</div>
+        <span>Follow-up happens too late — lead goes cold</span>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon bad">✕</div>
+        <span>You're paying for staff hours that produce zero revenue</span>
+      </div>
+    </div>
+    <div class="problem-col">
+      <div class="col-label good">✓ After ShinCore</div>
+      <div class="problem-item">
+        <div class="problem-icon good">✓</div>
+        <span>Every call answered instantly — day, night, weekend</span>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon good">✓</div>
+        <span>AI qualifies leads: what they need, urgency, budget</span>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon good">✓</div>
+        <span>Every lead logged, tagged, and sent to your CRM</span>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon good">✓</div>
+        <span>Hot leads booked automatically — zero delay</span>
+      </div>
+      <div class="problem-item">
+        <div class="problem-icon good">✓</div>
+        <span>Flat monthly cost. Infinite scalability.</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-wrap" id="how">
+<div class="section fade-in">
+  <div class="section-label">How It Works</div>
+  <h2>4 steps from call to closed deal.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-icon">📞</div>
+      <h3>Call Received</h3>
+      <p>Customer calls your number. ShinCore answers in under 3 seconds — any time of day.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-icon">🧠</div>
+      <h3>Lead Qualified</h3>
+      <p>AI asks the right questions: what they need, how urgent, are they ready to buy.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-icon">⚡</div>
+      <h3>Action Triggered</h3>
+      <p>Booking, quote request, or hot transfer to your team — instantly, no manual step.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-icon">💰</div>
+      <h3>Revenue Captured</h3>
+      <p>Lead data hits your CRM. You close the deal. Nothing falls through the cracks.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- DEMO -->
+<div style="background: var(--black);" id="demo">
+<div class="section fade-in" style="text-align:center;">
+  <div class="section-label">Live Demo</div>
+  <h2>Hear it for yourself.</h2>
+
+  <div style="margin:32px auto 40px;display:inline-block;">
+    <div style="font-family:var(--font-head);font-size:clamp(52px,9vw,85px);font-weight:900;letter-spacing:20px;color:#00f5a0;text-shadow:0 0 2px rgba(0,245,160,1),0 0 8px rgba(0,245,160,0.1);animation:allaGlow 2s ease-in-out infinite alternate;line-height:1;">Alla</div>
+    <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.3em;color:rgba(0,245,160,0.6);text-transform:uppercase;margin-top:6px;">AI Receptionist · Live</div>
+    <div style="font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:4px;color:#00f5a0;text-transform:uppercase;margin-top:8px;">● Available 24/7</div>
+  </div>
+
+  <p style="color:var(--muted);font-family:var(--font-mono);font-size:15px;max-width:500px;margin:0 auto 48px;line-height:1.7;font-weight:300;">Call the number below and experience exactly what your customers will hear. Real AI. Real conversation.</p>
+  <div style="display:inline-flex;align-items:center;gap:20px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 48px;">
+    <div style="width:56px;height:56px;background:rgba(0,245,160,0.1);border:1px solid rgba(0,245,160,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;animation:pulse 2s infinite;">📞</div>
+    <div style="text-align:left;">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Demo Line</div>
+      <div style="font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--accent);">+1 (832) 645-8345</div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+        <div style="width:6px;height:6px;background:#00f5a0;border-radius:50%;box-shadow:0 0 8px #00f5a0, 0 0 16px #00f5a0;animation:pulse 2s infinite;"></div>
+        <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;background:linear-gradient(90deg,#00f5a0,#00c8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:0.15em;text-transform:uppercase;">Alla · AI Receptionist</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- INDUSTRIES -->
+<div style="background:var(--surface);border-top:1px solid var(--border);" id="industries">
+<div class="section fade-in">
+  <div class="section-label">Industries</div>
+  <h2>Works in any vertical.</h2>
+  <div class="industries-grid">
+    <div class="industry-card">
+      <div class="industry-icon">🔧</div>
+      <div class="industry-name">Plumbing</div>
+      <div class="industry-desc">Books emergency calls 24/7 while your crew is on the job.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">❄️</div>
+      <div class="industry-name">HVAC / Climate</div>
+      <div class="industry-desc">Captures seasonal rush calls and schedules service visits instantly.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">🏥</div>
+      <div class="industry-name">Clinics</div>
+      <div class="industry-desc">Handles appointment requests and patient inquiries around the clock.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">⚖️</div>
+      <div class="industry-name">Legal Services</div>
+      <div class="industry-desc">Qualifies leads and books consultations while you're in court.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">🚗</div>
+      <div class="industry-name">Auto Services</div>
+      <div class="industry-desc">Books tune-ups and repairs without putting customers on hold.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">🏠</div>
+      <div class="industry-name">Real Estate</div>
+      <div class="industry-desc">Follows up with leads instantly so no hot prospect goes cold.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">👨‍⚖️</div>
+      <div class="industry-name">Attorneys</div>
+      <div class="industry-desc">Screens potential clients and schedules case reviews automatically.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">🌿</div>
+      <div class="industry-name">Landscaping</div>
+      <div class="industry-desc">Books estimates and seasonal services while your team is outside.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">🧠</div>
+      <div class="industry-name">Therapists & Psychologists</div>
+      <div class="industry-desc">Gently handles intake calls and books sessions with discretion.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">💈</div>
+      <div class="industry-name">Barbershops</div>
+      <div class="industry-desc">Books haircut appointments mid-session while the barber is busy.</div>
+    </div>
+    <div class="industry-card">
+      <div class="industry-icon">🦷</div>
+      <div class="industry-name">Dental Clinics</div>
+      <div class="industry-desc">Schedules cleanings and urgent visits without front desk overload.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- WHY CHOOSE US -->
+<div style="background:var(--bg);border-top:1px solid var(--border);">
+<div class="section fade-in">
+  <div class="section-label">Why ShinCore AI</div>
+  <h2>Missing calls = missing money.</h2>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-number">$500+</div>
+      <div class="why-title">Lost per week</div>
+      <div class="why-desc">Missing just 10 calls a week at $50 avg ticket = $500 gone. Our AI costs a fraction of that.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-number">24/7</div>
+      <div class="why-title">Always on</div>
+      <div class="why-desc">Your AI receptionist never sleeps, never calls in sick, and never puts a customer on hold.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-number">&lt; 1s</div>
+      <div class="why-title">Response time</div>
+      <div class="why-desc">Answers instantly. No voicemail. No missed opportunity. Every lead captured in real time.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-number">Setup</div>
+      <div class="why-title">Done in days</div>
+      <div class="why-desc">We build and deploy your custom AI agent in under a week. Zero tech skills needed from you.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- LEAD FORM -->
+<div class="cta-section" id="contact">
+  <div class="cta-box" style="max-width:600px;">
+    <div class="section-label" style="text-align:center;">Get Started</div>
+    <h2>Get a Custom AI Agent<br>for Your Business.</h2>
+    <p>Fill out the form below and we'll set up your personalized demo — tailored to your industry and workflow.</p>
+
+    <div class="lead-form" id="leadForm">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" id="fieldName" placeholder="John Smith" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Email</label>
+        <input type="email" class="form-input" id="fieldEmail" placeholder="john@yourcompany.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company Name</label>
+        <input type="text" class="form-input" id="fieldCompany" placeholder="Acme Plumbing LLC" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-input" id="fieldPhone" placeholder="+1 (555) 000-0000" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">How many calls do you miss per day?</label>
+        <select class="form-input" id="fieldMissed">
+          <option value="">Select an option</option>
+          <option value="1-3">1–3 calls/day</option>
+          <option value="4-7">4–7 calls/day</option>
+          <option value="8-15">8–15 calls/day</option>
+          <option value="15+">15+ calls/day</option>
+        </select>
+      </div>
+      <button class="btn-submit" id="submitBtn" onclick="submitForm()">Stop Missing Leads →</button>
+      <div class="form-success" id="formSuccess">
+        ✅ Your info is received! One last step below.
+      </div>
+
+      <!-- CALENDLY BLOCK - hidden until form submitted -->
+      <div id="calendlyBlock" style="display:none; margin-top:32px; text-align:center; opacity:0; transform:translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease;">
+        <div style="
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 0.2em;
+          color: #ff4d4d;
+          text-transform: uppercase;
+          margin-bottom: 14px;
+          padding: 6px 16px;
+          border: 1px solid rgba(255,77,77,0.3);
+          border-radius: 20px;
+          display: inline-block;
+          background: rgba(255,77,77,0.08);
+          animation: pulse-red 1.8s ease-in-out infinite;
+        ">🔥 Only 3 spots left this week</div>
+
+        <div style="margin-bottom: 8px;"></div>
+
+        <a href="https://calendly.com/shincore-agency/15-min-shincore-ai-demo"
+           target="_blank"
+           id="calendlyBtn"
+           style="
+             display: inline-block;
+             position: relative;
+             overflow: hidden;
+             background: linear-gradient(135deg, #0066ff 0%, #00c8ff 100%);
+             color: #fff;
+             font-family: var(--font-head);
+             font-size: 17px;
+             font-weight: 800;
+             letter-spacing: 0.03em;
+             padding: 20px 40px;
+             border-radius: 14px;
+             text-decoration: none;
+             box-shadow: 0 8px 40px rgba(0,102,255,0.45), 0 0 0 0 rgba(0,102,255,0.4);
+             animation: glow-pulse 2s ease-in-out infinite;
+             transition: transform 0.2s ease, box-shadow 0.2s ease;
+           "
+           onmouseover="this.style.transform='translateY(-3px) scale(1.02)';this.style.boxShadow='0 14px 50px rgba(0,102,255,0.6)';"
+           onmouseout="this.style.transform='translateY(0) scale(1)';this.style.boxShadow='0 8px 40px rgba(0,102,255,0.45)';">
+          <span id="btnShine" style="
+            position: absolute;
+            top: 0; left: -100%;
+            width: 55%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+            transform: skewX(-18deg);
+            pointer-events: none;
+          "></span>
+          📅 &nbsp;Book Your Free Strategy Call &nbsp;→
+        </a>
+
+        <div style="
+          font-family: var(--font-mono);
+          font-size: 11px;
+          color: var(--muted);
+          letter-spacing: 0.1em;
+          margin-top: 12px;
+          text-transform: uppercase;
+        ">15 min &nbsp;·&nbsp; Free &nbsp;·&nbsp; No commitment</div>
+      </div>
+      <div class="form-error" id="formError">
+        ⚠️ Something went wrong. Please try again or email us at shincore.agency@gmail.com
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">Shin<span style="color:var(--accent)">Core</span> AI</div>
+  <div>© 2026 ShinCore AI. All rights reserved.</div>
+  <div>shincore.agency@gmail.com</div>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx - 5 + 'px';
+    cursor.style.top = my - 5 + 'px';
+  });
+
+  function animRing() {
+    rx += (mx - rx - 18) * 0.12;
+    ry += (my - ry - 18) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animRing);
+  }
+  animRing();
+
+  // Fade in on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Animate stat numbers
+  function animateNum(el, target, suffix = '') {
+    let start = 0;
+    const dur = 2000;
+    const step = timestamp => {
+      if (!start) start = timestamp;
+      const progress = Math.min((timestamp - start) / dur, 1);
+      const val = Math.floor(progress * target);
+      el.textContent = val + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  const statsObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const nums = e.target.querySelectorAll('.stat-num');
+        // only animate the % one
+        nums[0] && animateNum(nums[0], 62, '%');
+        statsObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  // Form submission
+  async function submitForm() {
+    const name = document.getElementById('fieldName').value.trim();
+    const email = document.getElementById('fieldEmail').value.trim();
+    const company = document.getElementById('fieldCompany').value.trim();
+    const phone = document.getElementById('fieldPhone').value.trim();
+    const btn = document.getElementById('submitBtn');
+    const success = document.getElementById('formSuccess');
+    const error = document.getElementById('formError');
+
+    const missed = document.getElementById('fieldMissed').value;
+
+    if (!name || !email || !company || !phone) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    success.style.display = 'none';
+    error.style.display = 'none';
+
+    try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('company', company);
+      formData.append('phone', phone);
+      formData.append('missedCalls', missed);
+      formData.append('source', 'shincore-landing');
+
+      await fetch('https://n8n-production-b0dc.up.railway.app/webhook/a32f4923-ebbd-4b71-a730-8efe63a78a9f', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+      });
+      // no-cors always succeeds if request is sent
+      success.style.display = 'block';
+      btn.style.display = 'none';
+
+      // Show calendly block with animation
+      const cal = document.getElementById('calendlyBlock');
+      cal.style.display = 'block';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          cal.style.opacity = '1';
+          cal.style.transform = 'translateY(0)';
+        });
+      });
+
+      // Shine loop on button
+      const shine = document.getElementById('btnShine');
+      setInterval(() => {
+        shine.style.transition = 'none';
+        shine.style.left = '-100%';
+        setTimeout(() => {
+          shine.style.transition = 'left 0.65s ease';
+          shine.style.left = '160%';
+        }, 80);
+      }, 2800);
+      document.getElementById('fieldName').value = '';
+      document.getElementById('fieldEmail').value = '';
+      document.getElementById('fieldCompany').value = '';
+      document.getElementById('fieldPhone').value = '';
+    } catch (err) {
+      error.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Get My Custom Demo →';
+    }
+  }
+
+</script>
+
+</body>
+</html>
