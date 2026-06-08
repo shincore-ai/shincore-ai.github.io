@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Agreement — ShinCore AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1e1e1e;
+      --text: #f0f0f0;
+      --muted: #666;
+      --accent: #c8f135;
+      --font-sans: 'Syne', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-back {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--bg);
+      background: var(--accent);
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s;
+    }
+    .nav-back:hover { opacity: 0.85; }
+
+    /* HEADER */
+    header {
+      padding: 140px 48px 64px;
+      max-width: 860px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .doc-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    .meta {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    /* CONTENT */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 64px 48px 120px;
+    }
+
+    .section {
+      margin-bottom: 64px;
+      padding-bottom: 64px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .section-number {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 24px;
+    }
+
+    p {
+      color: #b0b0b0;
+      font-size: 16px;
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+
+    ul {
+      list-style: none;
+      margin: 16px 0 24px;
+    }
+
+    ul li {
+      color: #b0b0b0;
+      font-size: 16px;
+      padding: 10px 0 10px 24px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      line-height: 1.7;
+    }
+    ul li:first-child { border-top: 1px solid var(--border); }
+    ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+
+    .highlight-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 24px 28px;
+      margin: 24px 0;
+      border-radius: 2px;
+    }
+
+    .highlight-box p {
+      color: var(--text);
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .liability-amount {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--accent);
+      display: block;
+      margin: 16px 0 8px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 3px 10px;
+      border-radius: 2px;
+      letter-spacing: 0.1em;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 48px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .footer-note {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .footer-note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      header { padding: 120px 20px 48px; }
+      main { padding: 48px 20px 80px; }
+      footer { padding: 24px 20px; }
+      .meta { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">ShinCore AI</a>
+  <a href="https://shincore-tech.com" target="_blank" rel="noopener" class="nav-back">← Back to site</a>
+</nav>
+
+<header>
+  <div class="doc-label">Legal Document</div>
+  <h1>Service Agreement</h1>
+  <div class="meta">
+    <span>Effective: June 1, 2026</span>
+    <span>Version: 1.0</span>
+    <span>Jurisdiction: United States of America</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- INTRO -->
+  <div class="section">
+    <p>This Service Agreement ("Agreement") is entered into between <strong>ShinCore AI</strong> ("Provider", "we", "us") and the business entity or individual ("Client", "you") that purchases or uses ShinCore AI services. By paying an invoice, signing up, or using any ShinCore AI product, you agree to be bound by this Agreement.</p>
+  </div>
+
+  <!-- SECTION 1: SCOPE OF WORK -->
+  <div class="section">
+    <div class="section-number">Section 01</div>
+    <h2>Scope of Work</h2>
+    <p>ShinCore AI provides AI-powered automation services for home service businesses, including but not limited to:</p>
+    <ul>
+      <li>24/7 AI voice receptionist and dispatcher setup and configuration</li>
+      <li>Integration with third-party platforms including scheduling, CRM, and SMS systems</li>
+      <li>Workflow automation via n8n, Vapi, Twilio, and connected services</li>
+      <li>Ongoing technical support and maintenance of the deployed AI system</li>
+      <li>Call logging, appointment booking, and customer notification automation</li>
+    </ul>
+    <p>Services are delivered remotely. The specific deliverables, timeline, and pricing for each Client are defined in the corresponding invoice or onboarding document, which forms part of this Agreement.</p>
+    <div class="highlight-box">
+      <p>ShinCore AI does not provide legal, financial, or medical advice. Any business decisions made based on AI-generated call data or summaries remain the sole responsibility of the Client.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 2: LIMITATION OF LIABILITY -->
+  <div class="section">
+    <div class="section-number">Section 02</div>
+    <h2>Limitation of Liability</h2>
+    <p>To the maximum extent permitted by applicable law, ShinCore AI's total cumulative liability to the Client for any claims arising out of or related to this Agreement — regardless of the form of action or the theory of liability — shall not exceed:</p>
+    <span class="liability-amount">$500.00 USD</span>
+    <p>This limitation applies to all claims in aggregate, including but not limited to claims for direct damages, lost profits, missed bookings, system downtime, third-party service failures, or any other losses arising from the use of ShinCore AI services.</p>
+    <p>ShinCore AI shall not be liable for:</p>
+    <ul>
+      <li>Indirect, incidental, special, or consequential damages of any kind</li>
+      <li>Loss of revenue, customers, or business opportunities</li>
+      <li>Failures caused by third-party platforms (Vapi, Twilio, Google, n8n, etc.)</li>
+      <li>Inaccuracies in AI-generated transcriptions, summaries, or call data</li>
+      <li>Service interruptions caused by internet outages or infrastructure failures outside our control</li>
+    </ul>
+  </div>
+
+  <!-- SECTION 3: DISCLAIMER -->
+  <div class="section">
+    <div class="section-number">Section 03</div>
+    <h2>Disclaimer of Warranties</h2>
+    <div style="margin-bottom: 20px;">
+      <span class="tag">AS IS</span>
+      <span class="tag">AS AVAILABLE</span>
+      <span class="tag">NO WARRANTIES</span>
+    </div>
+    <p>All ShinCore AI services are provided <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> without warranties of any kind, either express or implied, including but not limited to:</p>
+    <ul>
+      <li>Implied warranties of merchantability or fitness for a particular purpose</li>
+      <li>Guarantees of uninterrupted, error-free, or 100% accurate AI performance</li>
+      <li>Warranties regarding the behavior of integrated third-party services</li>
+      <li>Guarantees that the AI will capture every call, booking, or customer interaction without failure</li>
+    </ul>
+    <div class="highlight-box">
+      <p>The Client acknowledges that AI voice systems are probabilistic in nature and may occasionally misinterpret customer speech, fail to complete a booking, or produce inaccurate summaries. ShinCore AI is not responsible for business outcomes arising from such limitations.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 4: PAYMENT -->
+  <div class="section">
+    <div class="section-number">Section 04</div>
+    <h2>Payment Terms</h2>
+    <p>Services are billed as a one-time setup fee plus a monthly recurring subscription, as outlined in the Client's invoice. Payment is due upon receipt of invoice. By submitting payment, the Client confirms acceptance of this Agreement in full, including the Limitation of Liability in Section 02.</p>
+    <ul>
+      <li>All fees are non-refundable unless otherwise agreed in writing</li>
+      <li>Monthly subscriptions may be cancelled with 30 days written notice</li>
+      <li>ShinCore AI reserves the right to suspend services for unpaid invoices</li>
+    </ul>
+  </div>
+
+  <!-- SECTION 5: GOVERNING LAW -->
+  <div class="section">
+    <div class="section-number">Section 05</div>
+    <h2>Governing Law</h2>
+    <p>This Agreement shall be governed by and construed in accordance with the laws of the State of Texas, United States of America, without regard to its conflict of law provisions. Any disputes arising under this Agreement shall be resolved in the federal or state courts of the United States.</p>
+  </div>
+
+  <!-- SECTION 6: CONTACT -->
+  <div class="section">
+    <div class="section-number">Section 06</div>
+    <h2>Contact</h2>
+    <p>For questions regarding this Agreement, please contact:</p>
+    <div class="highlight-box">
+      <p>
+        <strong>ShinCore AI</strong><br>
+        Email: shinartyom050607@gmail.com<br>
+        Website: shincore-tech.com
+      </p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p class="footer-note">
+    © 2026 ShinCore AI. All rights reserved.<br>
+    By paying any ShinCore AI invoice, you confirm that you have read, understood, and agreed to this Service Agreement, including the $500 limitation of liability.<br>
+    <a href="https://shincore-tech.com">← Return to shincore-tech.com</a>
+  </p>
+</footer>
+
+</body>
+</html>
